@@ -6,8 +6,7 @@ import math
 import random
 import statistics
 import time
-from typing import Callable
-
+from collections.abc import Callable
 
 # ---------------------------------------------------------------------------
 # Monte Carlo option pricer implementations

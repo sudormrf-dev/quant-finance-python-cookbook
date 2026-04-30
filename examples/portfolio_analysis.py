@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import math
+import os
 import random
 import sys
-import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from patterns.portfolio import Asset, Portfolio, PortfolioWeights, RebalanceRule
+from patterns.returns import ReturnSeries
 from patterns.risk_metrics import (
     RiskReport,
     compute_cvar,
@@ -17,8 +18,6 @@ from patterns.risk_metrics import (
     compute_sharpe,
     compute_var,
 )
-from patterns.returns import ReturnSeries
-
 
 # ---------------------------------------------------------------------------
 # Synthetic data generation
