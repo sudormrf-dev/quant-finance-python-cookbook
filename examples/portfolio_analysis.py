@@ -25,16 +25,16 @@ from patterns.returns import ReturnSeries
 # ---------------------------------------------------------------------------
 
 ASSETS_META: list[tuple[str, str, float, float]] = [
-    ("AAPL", "Technology",   0.00065, 0.016),
-    ("MSFT", "Technology",   0.00060, 0.014),
-    ("GOOGL","Technology",   0.00055, 0.015),
-    ("JPM",  "Financials",   0.00040, 0.018),
-    ("GS",   "Financials",   0.00038, 0.020),
-    ("JNJ",  "Healthcare",   0.00030, 0.010),
-    ("PFE",  "Healthcare",   0.00028, 0.011),
-    ("XOM",  "Energy",       0.00035, 0.019),
-    ("NEE",  "Utilities",    0.00025, 0.009),
-    ("BND",  "Fixed Income", 0.00010, 0.004),
+    ("AAPL", "Technology", 0.00065, 0.016),
+    ("MSFT", "Technology", 0.00060, 0.014),
+    ("GOOGL", "Technology", 0.00055, 0.015),
+    ("JPM", "Financials", 0.00040, 0.018),
+    ("GS", "Financials", 0.00038, 0.020),
+    ("JNJ", "Healthcare", 0.00030, 0.010),
+    ("PFE", "Healthcare", 0.00028, 0.011),
+    ("XOM", "Energy", 0.00035, 0.019),
+    ("NEE", "Utilities", 0.00025, 0.009),
+    ("BND", "Fixed Income", 0.00010, 0.004),
 ]
 
 TRADING_DAYS = 252
@@ -71,6 +71,7 @@ def build_assets(seed_offset: int = 0) -> list[Asset]:
 # Portfolio metric helpers
 # ---------------------------------------------------------------------------
 
+
 def portfolio_combined_returns(
     assets: list[Asset], weights: dict[str, float]
 ) -> list[float]:
@@ -79,7 +80,9 @@ def portfolio_combined_returns(
     asset_map = {a.ticker: a.returns for a in assets}
     combined = []
     for day in range(n):
-        r = sum(weights.get(ticker, 0.0) * rets[day] for ticker, rets in asset_map.items())
+        r = sum(
+            weights.get(ticker, 0.0) * rets[day] for ticker, rets in asset_map.items()
+        )
         combined.append(r)
     return combined
 
@@ -102,7 +105,7 @@ def build_risk_report(name: str, rets: list[float]) -> RiskReport:
         var_95=compute_var(rets, 0.95),
         cvar_95=compute_cvar(rets, 0.95),
         sharpe=compute_sharpe(rets, risk_free_rate=0.04, periods_per_year=TRADING_DAYS),
-        sortino=0.0,   # not needed for demo
+        sortino=0.0,  # not needed for demo
         max_drawdown=compute_max_drawdown(rets),
         volatility=sigma_ann,
         annualized_return=ann_ret,
@@ -113,6 +116,7 @@ def build_risk_report(name: str, rets: list[float]) -> RiskReport:
 # Simplified Markowitz optimisation (grid search over 2-asset frontier)
 # ---------------------------------------------------------------------------
 
+
 def markowitz_min_vol(assets: list[Asset]) -> dict[str, float]:
     """Return weights that minimise portfolio volatility (equal-vol inverse weighting)."""
     inv_vol = {a.ticker: 1.0 / max(a.volatility(), 1e-9) for a in assets}
@@ -120,7 +124,9 @@ def markowitz_min_vol(assets: list[Asset]) -> dict[str, float]:
     return {t: v / total for t, v in inv_vol.items()}
 
 
-def markowitz_max_sharpe(assets: list[Asset], rfr_daily: float = 0.04 / 252) -> dict[str, float]:
+def markowitz_max_sharpe(
+    assets: list[Asset], rfr_daily: float = 0.04 / 252
+) -> dict[str, float]:
     """Return weights that maximise Sharpe (Sharpe-score weighting heuristic)."""
     scores: dict[str, float] = {}
     for a in assets:
@@ -142,7 +148,10 @@ def target_return_weights(
     best_weights = min_v
     best_gap = float("inf")
     for alpha in [i / 20 for i in range(21)]:
-        blended = {t: alpha * max_s.get(t, 0.0) + (1 - alpha) * min_v.get(t, 0.0) for t in min_v}
+        blended = {
+            t: alpha * max_s.get(t, 0.0) + (1 - alpha) * min_v.get(t, 0.0)
+            for t in min_v
+        }
         asset_map = {a.ticker: a for a in assets}
         port_ret = sum(blended[t] * asset_map[t].mean_return() for t in blended)
         gap = abs(port_ret - target_daily)
@@ -156,6 +165,7 @@ def target_return_weights(
 # Display helpers
 # ---------------------------------------------------------------------------
 
+
 def print_individual_risk_table(assets: list[Asset]) -> None:
     """Print per-asset Sharpe, VaR, CVaR, max drawdown."""
     print("\n  PER-ASSET RISK METRICS (1-year daily returns, annualised)")
@@ -168,7 +178,9 @@ def print_individual_risk_table(assets: list[Asset]) -> None:
         stats = rs.stats()
         ann_ret = stats.annualized_return(TRADING_DAYS) * 100
         ann_vol = stats.annualized_vol(TRADING_DAYS) * 100
-        sharpe = compute_sharpe(a.returns, risk_free_rate=0.04, periods_per_year=TRADING_DAYS)
+        sharpe = compute_sharpe(
+            a.returns, risk_free_rate=0.04, periods_per_year=TRADING_DAYS
+        )
         var95 = compute_var(a.returns, 0.95) * 100
         cvar95 = compute_cvar(a.returns, 0.95) * 100
         mdd = compute_max_drawdown(a.returns) * 100
@@ -222,6 +234,7 @@ def print_sector_weights(
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main() -> None:
     """Entry point: full portfolio analysis pipeline."""
     print("\n" + "=" * 80)
@@ -241,10 +254,14 @@ def main() -> None:
         p.add_asset(a)
     p.set_weights(eq_weights)
 
-    print(f"  Equal-weight portfolio  |  assets: {p.asset_count()}  |  HHI: {p.concentration_hhi():.4f}  |  Eff-N: {p.effective_n():.1f}")
+    print(
+        f"  Equal-weight portfolio  |  assets: {p.asset_count()}  |  HHI: {p.concentration_hhi():.4f}  |  Eff-N: {p.effective_n():.1f}"
+    )
     eq_rets = portfolio_combined_returns(assets, eq_weights.weights)
     eq_report = build_risk_report("Equal Weight", eq_rets)
-    print(f"  Ann.Return: {eq_report.annualized_return * 100:.2f}%  |  Ann.Vol: {eq_report.volatility * 100:.2f}%  |  Sharpe: {eq_report.sharpe:.2f}\n")
+    print(
+        f"  Ann.Return: {eq_report.annualized_return * 100:.2f}%  |  Ann.Vol: {eq_report.volatility * 100:.2f}%  |  Sharpe: {eq_report.sharpe:.2f}\n"
+    )
 
     # 3. Markowitz frontier
     min_v_w = markowitz_min_vol(assets)
@@ -253,7 +270,7 @@ def main() -> None:
 
     portfolios = [
         ("Min Volatility", min_v_w),
-        ("Max Sharpe",     max_s_w),
+        ("Max Sharpe", max_s_w),
         ("Target 15% Ret", tgt_w),
     ]
     print_efficient_frontier(assets, portfolios)

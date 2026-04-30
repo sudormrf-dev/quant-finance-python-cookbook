@@ -31,10 +31,10 @@ def generate_synthetic_options(n: int = 20, seed: int = 42) -> list[OptionContra
         spot = random.choice(spots)
         strike = random.choice(strikes)
         otype = option_types[i % 2]
-        tte = round(random.uniform(0.05, 1.0), 4)   # 18 days to 1 year
+        tte = round(random.uniform(0.05, 1.0), 4)  # 18 days to 1 year
         vol = round(random.uniform(0.12, 0.55), 4)  # 12% to 55% IV
         rfr = round(random.uniform(0.02, 0.06), 4)  # 2% to 6%
-        div = round(random.uniform(0.0, 0.03), 4)   # 0% to 3%
+        div = round(random.uniform(0.0, 0.03), 4)  # 0% to 3%
         contracts.append(
             OptionContract(
                 option_type=otype,
@@ -95,7 +95,9 @@ def print_options_table(contracts: list[OptionContract]) -> None:
         )
 
     print(sep)
-    print(f"  Portfolio notional value (x{contracts[0].multiplier} multiplier): ${total_value:,.2f}")
+    print(
+        f"  Portfolio notional value (x{contracts[0].multiplier} multiplier): ${total_value:,.2f}"
+    )
     print(f"  Net delta: {total_delta:+.4f}  |  Net gamma: {total_gamma:.4f}")
     print(sep)
 
@@ -103,8 +105,10 @@ def print_options_table(contracts: list[OptionContract]) -> None:
 def greeks_sensitivity_demo(base_spot: float = 100.0) -> None:
     """Show how delta and gamma change as the spot moves ±20%."""
     print("\n  DELTA / GAMMA PROFILE — ATM Call as spot moves")
-    print(f"  (Strike=100, TTE=0.25yr, IV=25%, RFR=4%)\n")
-    print(f"  {'Spot':>6}  {'Moneyness':>10}  {'Price':>7}  {'Delta':>7}  {'Gamma':>7}  {'Vega':>6}")
+    print("  (Strike=100, TTE=0.25yr, IV=25%, RFR=4%)\n")
+    print(
+        f"  {'Spot':>6}  {'Moneyness':>10}  {'Price':>7}  {'Delta':>7}  {'Gamma':>7}  {'Vega':>6}"
+    )
     print("  " + "-" * 55)
 
     from patterns.pricing import BlackScholesInputs
@@ -112,8 +116,11 @@ def greeks_sensitivity_demo(base_spot: float = 100.0) -> None:
     for offset in range(-20, 22, 5):
         spot = base_spot + offset
         inp = BlackScholesInputs(
-            spot=spot, strike=100.0, time_to_expiry=0.25,
-            risk_free_rate=0.04, volatility=0.25,
+            spot=spot,
+            strike=100.0,
+            time_to_expiry=0.25,
+            risk_free_rate=0.04,
+            volatility=0.25,
         )
         price = black_scholes_price(inp, OptionType.CALL)
         g = black_scholes_greeks(inp, OptionType.CALL)
@@ -130,8 +137,10 @@ def put_call_parity_check(contracts: list[OptionContract]) -> None:
     from patterns.pricing import BlackScholesInputs
 
     print("\n  PUT-CALL PARITY VERIFICATION (sample of 5 pairs)")
-    print(f"  C - P = S*e^(-q*T) - K*e^(-r*T)  (should be near 0 difference)\n")
-    print(f"  {'Spot':>6}  {'Strike':>6}  {'TTE':>6}  {'Call':>7}  {'Put':>6}  {'LHS-RHS':>9}")
+    print("  C - P = S*e^(-q*T) - K*e^(-r*T)  (should be near 0 difference)\n")
+    print(
+        f"  {'Spot':>6}  {'Strike':>6}  {'TTE':>6}  {'Call':>7}  {'Put':>6}  {'LHS-RHS':>9}"
+    )
     print("  " + "-" * 55)
 
     random.seed(0)
@@ -140,14 +149,22 @@ def put_call_parity_check(contracts: list[OptionContract]) -> None:
         strike = random.choice([90.0, 100.0, 110.0])
         tte = round(random.uniform(0.1, 0.5), 3)
         vol, rfr, div = 0.20, 0.04, 0.01
-        inp = BlackScholesInputs(spot=spot, strike=strike, time_to_expiry=tte,
-                                 risk_free_rate=rfr, volatility=vol, dividend_yield=div)
+        inp = BlackScholesInputs(
+            spot=spot,
+            strike=strike,
+            time_to_expiry=tte,
+            risk_free_rate=rfr,
+            volatility=vol,
+            dividend_yield=div,
+        )
         call_p = black_scholes_price(inp, OptionType.CALL)
         put_p = black_scholes_price(inp, OptionType.PUT)
         lhs = call_p - put_p
         rhs = spot * math.exp(-div * tte) - strike * math.exp(-rfr * tte)
         diff = lhs - rhs
-        print(f"  {spot:>6.1f}  {strike:>6.1f}  {tte:>6.3f}  {call_p:>7.3f}  {put_p:>6.3f}  {diff:>+9.6f}")
+        print(
+            f"  {spot:>6.1f}  {strike:>6.1f}  {tte:>6.3f}  {call_p:>7.3f}  {put_p:>6.3f}  {diff:>+9.6f}"
+        )
 
 
 def main() -> None:

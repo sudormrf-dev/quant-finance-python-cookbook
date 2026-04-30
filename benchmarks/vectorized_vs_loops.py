@@ -16,7 +16,7 @@ from typing import Callable
 N_SIMULATIONS = 10_000
 SPOT = 100.0
 STRIKE = 100.0
-TIME_TO_EXPIRY = 0.5    # years
+TIME_TO_EXPIRY = 0.5  # years
 RISK_FREE_RATE = 0.04
 VOLATILITY = 0.20
 SEED = 42
@@ -35,6 +35,7 @@ def _pregenerate_normals(n: int, seed: int = SEED) -> list[float]:
 
 
 # --- Implementation 1: pure Python for-loop (most naïve) ---
+
 
 def mc_price_loop(
     spot: float,
@@ -57,6 +58,7 @@ def mc_price_loop(
 
 # --- Implementation 2: list comprehension ---
 
+
 def mc_price_comprehension(
     spot: float,
     strike: float,
@@ -70,13 +72,13 @@ def mc_price_comprehension(
     drift = (rfr - 0.5 * vol * vol) * tte
     diffusion = vol * math.sqrt(tte)
     payoffs = [
-        max(spot * math.exp(drift + diffusion * z) - strike, 0.0)
-        for z in normals
+        max(spot * math.exp(drift + diffusion * z) - strike, 0.0) for z in normals
     ]
     return discount * sum(payoffs) / len(payoffs)
 
 
 # --- Implementation 3: generator expression (memory-efficient, no intermediate list) ---
+
 
 def mc_price_generator(
     spot: float,
@@ -91,13 +93,13 @@ def mc_price_generator(
     drift = (rfr - 0.5 * vol * vol) * tte
     diffusion = vol * math.sqrt(tte)
     total = sum(
-        max(spot * math.exp(drift + diffusion * z) - strike, 0.0)
-        for z in normals
+        max(spot * math.exp(drift + diffusion * z) - strike, 0.0) for z in normals
     )
     return discount * total / len(normals)
 
 
 # --- Implementation 4: pre-compute constants + map ---
+
 
 def mc_price_map(
     spot: float,
@@ -121,6 +123,7 @@ def mc_price_map(
 
 
 # --- Implementation 5: fully vectorised via math ops on pre-built array ---
+
 
 def mc_price_vectorised(
     spot: float,
@@ -148,13 +151,16 @@ def mc_price_vectorised(
 # Black-Scholes closed form (reference / ground truth)
 # ---------------------------------------------------------------------------
 
+
 def _norm_cdf(x: float) -> float:
     return (1.0 + math.erf(x / math.sqrt(2.0))) / 2.0
 
 
-def bs_call_price(spot: float, strike: float, tte: float, rfr: float, vol: float) -> float:
+def bs_call_price(
+    spot: float, strike: float, tte: float, rfr: float, vol: float
+) -> float:
     """Black-Scholes analytical call price (reference value)."""
-    d1 = (math.log(spot / strike) + (rfr + 0.5 * vol ** 2) * tte) / (vol * math.sqrt(tte))
+    d1 = (math.log(spot / strike) + (rfr + 0.5 * vol**2) * tte) / (vol * math.sqrt(tte))
     d2 = d1 - vol * math.sqrt(tte)
     return spot * _norm_cdf(d1) - strike * math.exp(-rfr * tte) * _norm_cdf(d2)
 
@@ -162,6 +168,7 @@ def bs_call_price(spot: float, strike: float, tte: float, rfr: float, vol: float
 # ---------------------------------------------------------------------------
 # Benchmarking harness
 # ---------------------------------------------------------------------------
+
 
 def time_fn(fn: Callable[[], float], repeats: int = 5) -> tuple[float, float]:
     """Return (mean_ms, stdev_ms) over *repeats* calls."""
@@ -179,11 +186,36 @@ def run_benchmarks() -> list[dict[str, object]]:
     bs_ref = bs_call_price(SPOT, STRIKE, TIME_TO_EXPIRY, RISK_FREE_RATE, VOLATILITY)
 
     implementations: list[tuple[str, Callable[[], float]]] = [
-        ("Pure for-loop",        lambda: mc_price_loop(SPOT, STRIKE, TIME_TO_EXPIRY, RISK_FREE_RATE, VOLATILITY, normals)),
-        ("List comprehension",   lambda: mc_price_comprehension(SPOT, STRIKE, TIME_TO_EXPIRY, RISK_FREE_RATE, VOLATILITY, normals)),
-        ("Generator expression", lambda: mc_price_generator(SPOT, STRIKE, TIME_TO_EXPIRY, RISK_FREE_RATE, VOLATILITY, normals)),
-        ("map() + closure",      lambda: mc_price_map(SPOT, STRIKE, TIME_TO_EXPIRY, RISK_FREE_RATE, VOLATILITY, normals)),
-        ("Vectorised (list+map)", lambda: mc_price_vectorised(SPOT, STRIKE, TIME_TO_EXPIRY, RISK_FREE_RATE, VOLATILITY, normals)),
+        (
+            "Pure for-loop",
+            lambda: mc_price_loop(
+                SPOT, STRIKE, TIME_TO_EXPIRY, RISK_FREE_RATE, VOLATILITY, normals
+            ),
+        ),
+        (
+            "List comprehension",
+            lambda: mc_price_comprehension(
+                SPOT, STRIKE, TIME_TO_EXPIRY, RISK_FREE_RATE, VOLATILITY, normals
+            ),
+        ),
+        (
+            "Generator expression",
+            lambda: mc_price_generator(
+                SPOT, STRIKE, TIME_TO_EXPIRY, RISK_FREE_RATE, VOLATILITY, normals
+            ),
+        ),
+        (
+            "map() + closure",
+            lambda: mc_price_map(
+                SPOT, STRIKE, TIME_TO_EXPIRY, RISK_FREE_RATE, VOLATILITY, normals
+            ),
+        ),
+        (
+            "Vectorised (list+map)",
+            lambda: mc_price_vectorised(
+                SPOT, STRIKE, TIME_TO_EXPIRY, RISK_FREE_RATE, VOLATILITY, normals
+            ),
+        ),
     ]
 
     results = []
@@ -196,14 +228,16 @@ def run_benchmarks() -> list[dict[str, object]]:
             baseline_ms = mean_ms
         speedup = baseline_ms / mean_ms if mean_ms > 0 else 1.0
         error_pct = abs(price - bs_ref) / bs_ref * 100
-        results.append({
-            "label": label,
-            "price": price,
-            "mean_ms": mean_ms,
-            "std_ms": std_ms,
-            "speedup": speedup,
-            "error_pct": error_pct,
-        })
+        results.append(
+            {
+                "label": label,
+                "price": price,
+                "mean_ms": mean_ms,
+                "std_ms": std_ms,
+                "speedup": speedup,
+                "error_pct": error_pct,
+            }
+        )
 
     return results, bs_ref
 
@@ -212,15 +246,18 @@ def run_benchmarks() -> list[dict[str, object]]:
 # Additional micro-benchmark: loop overhead vs math.exp direct
 # ---------------------------------------------------------------------------
 
+
 def bench_exp_strategies(n: int = N_SIMULATIONS) -> list[dict[str, object]]:
     """Compare three ways to apply math.exp to a list of N values."""
     data = [random.gauss(0, 1) for _ in range(n)]
 
     strategies: list[tuple[str, Callable[[], list[float]]]] = [
-        ("for-loop append",     lambda: [math.exp(x) for x in data]),   # comprehension IS a loop
+        (
+            "for-loop append",
+            lambda: [math.exp(x) for x in data],
+        ),  # comprehension IS a loop
         ("map(math.exp, data)", lambda: list(map(math.exp, data))),
-        ("manual loop",
-            lambda: _manual_exp_loop(data)),
+        ("manual loop", lambda: _manual_exp_loop(data)),
     ]
 
     out = []
@@ -248,10 +285,13 @@ def _manual_exp_loop(data: list[float]) -> list[float]:
 # Pretty-print helpers
 # ---------------------------------------------------------------------------
 
+
 def print_mc_results(results: list[dict[str, object]], bs_ref: float) -> None:
     print(f"\n  MONTE CARLO BENCHMARK — {N_SIMULATIONS:,} simulations")
     print(f"  Black-Scholes reference price: ${bs_ref:.4f}")
-    print(f"  (S={SPOT}, K={STRIKE}, T={TIME_TO_EXPIRY}yr, r={RISK_FREE_RATE}, σ={VOLATILITY})\n")
+    print(
+        f"  (S={SPOT}, K={STRIKE}, T={TIME_TO_EXPIRY}yr, r={RISK_FREE_RATE}, σ={VOLATILITY})\n"
+    )
     hdr = f"  {'Implementation':>24}  {'Price':>7}  {'Mean(ms)':>9}  {'Std(ms)':>7}  {'Speedup':>7}  {'Error%':>7}"
     print("  " + "-" * (len(hdr) - 2))
     print(hdr)
@@ -282,6 +322,7 @@ def print_exp_results(results: list[dict[str, object]]) -> None:
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main() -> None:
     """Entry point: run all benchmarks and print results."""
     print("\n" + "=" * 80)
@@ -298,8 +339,10 @@ def main() -> None:
     fastest_mc = min(mc_results, key=lambda r: r["mean_ms"])
     slowest_mc = max(mc_results, key=lambda r: r["mean_ms"])
     overall_speedup = slowest_mc["mean_ms"] / fastest_mc["mean_ms"]
-    print(f"  Overall MC speedup ({slowest_mc['label']} → {fastest_mc['label']}): {overall_speedup:.1f}x")
-    print(f"  All prices within 0.1% of Black-Scholes reference.")
+    print(
+        f"  Overall MC speedup ({slowest_mc['label']} → {fastest_mc['label']}): {overall_speedup:.1f}x"
+    )
+    print("  All prices within 0.1% of Black-Scholes reference.")
     print("=" * 80 + "\n")
 
 
