@@ -169,7 +169,11 @@ def target_return_weights(
 def print_individual_risk_table(assets: list[Asset]) -> None:
     """Print per-asset Sharpe, VaR, CVaR, max drawdown."""
     print("\n  PER-ASSET RISK METRICS (1-year daily returns, annualised)")
-    hdr = f"  {'Ticker':>6}  {'Sector':>12}  {'Ann.Ret%':>8}  {'Vol%':>6}  {'Sharpe':>6}  {'VaR95%':>7}  {'CVaR95%':>8}  {'MaxDD%':>7}"
+    cols = (
+        f"{'Ticker':>6}  {'Sector':>12}  {'Ann.Ret%':>8}  {'Vol%':>6}  "
+        f"{'Sharpe':>6}  {'VaR95%':>7}  {'CVaR95%':>8}  {'MaxDD%':>7}"
+    )
+    hdr = '  ' + cols
     print("  " + "-" * (len(hdr) - 2))
     print(hdr)
     print("  " + "-" * (len(hdr) - 2))
@@ -255,12 +259,14 @@ def main() -> None:
     p.set_weights(eq_weights)
 
     print(
-        f"  Equal-weight portfolio  |  assets: {p.asset_count()}  |  HHI: {p.concentration_hhi():.4f}  |  Eff-N: {p.effective_n():.1f}"
+        f"  Equal-weight portfolio  |  assets: {p.asset_count()}  |  HHI: {p.concentration_hhi():.4f}"
+        f"  |  Eff-N: {p.effective_n():.1f}"
     )
     eq_rets = portfolio_combined_returns(assets, eq_weights.weights)
     eq_report = build_risk_report("Equal Weight", eq_rets)
     print(
-        f"  Ann.Return: {eq_report.annualized_return * 100:.2f}%  |  Ann.Vol: {eq_report.volatility * 100:.2f}%  |  Sharpe: {eq_report.sharpe:.2f}\n"
+        f"  Ann.Return: {eq_report.annualized_return * 100:.2f}%  |  Ann.Vol: {eq_report.volatility * 100:.2f}%"
+        f"  |  Sharpe: {eq_report.sharpe:.2f}\n"
     )
 
     # 3. Markowitz frontier
